@@ -35,12 +35,9 @@ Notebook ejecutable de punta a punta: [ejecutar_backtest_sin_db.ipynb](./ejecuta
 - Walk-forward real, no solo un backtest de una pasada: ventanas
   secuenciales sin solape en el tramo operativo, capital reciclado,
   universo histórico reconstruido por ventana.
-- El control de riesgo es un hallazgo, no un supuesto: al comparar
-  la estrategia con y sin cada capa de control (mismos datos, misma
-  selección), se encontró evidencia de que uno de los controles
-  (CUSUM) queda estructuralmente ciego a un modo de falla específico
-  — deterioro gradual de la relación entre los activos — por una
-  razón estadística identificable, no por casualidad. 
+- Durante el análisis se observó que CUSUM detecta adecuadamente cambios abruptos,
+  pero presenta menor sensibilidad frente a deterioros graduales del hedge ratio.
+  Esta observación se documenta y discute en el informe metodológico.
 - Las limitaciones están documentadas a propósito, no escondidas: el
   límite real de datos intradía disponibles, el sesgo de
   supervivencia que queda parcialmente resuelto, el tamaño de
