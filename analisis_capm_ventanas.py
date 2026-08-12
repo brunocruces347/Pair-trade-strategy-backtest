@@ -94,6 +94,26 @@ def construir_retorno_portafolio_por_dia(res_oos_subset: pd.DataFrame, resumen_f
     OLS explotaba con "zero-size array to reduction operation maximum"
     -- bug real, encontrado en la primera corrida contra datos reales.
 
+    Retorno_t = PNL_t / Denominador_t, donde Denominador_t es la
+    valorización TOTAL (suma de Valorizacion_Par de todas las filas,
+    pares + cualquier overlay como una cobertura) del día anterior --
+    NO capital_inicio fijo de toda la ventana (eso subestima el
+    denominador real a medida que el capital se mueve dentro de la
+    ventana, e infla el retorno estimado -- bug real, encontrado al
+    calcular el CAPM con cobertura: el beta salía sistemáticamente más
+    alto de lo que debía).
+
+    EXCEPCIÓN -- el primer día de CADA ventana usa capital_inicio como
+    ancla (no hay "valorización de ayer" disponible ahí -- ayer
+    todavía era la ventana anterior, o no había operación). Esto NO es
+    una regla distinta pegada a la lógica -- capital_inicio de la
+    ventana N es EXACTAMENTE capital_fin de la ventana N-1 (así
+    recicla capital correr_backtest_secuencial), así que anclar ahí es
+    la continuación natural de "valorización t-1", solo que usando el
+    número ya oficial de cierre en vez de encadenar series diarias que
+    podrían tener un salto de calendario entre el fin de una ventana y
+    el inicio de la siguiente.
+
     Sirve tanto para la CARTERA completa (pasarle todos los pares) como
     para UN par puntual (pasarle solo ese par ya filtrado) -- la
     agregación es la misma, solo cambia qué filas le pasas. Requiere
@@ -101,10 +121,16 @@ def construir_retorno_portafolio_por_dia(res_oos_subset: pd.DataFrame, resumen_f
     cargar con guardar_cargar_resultados.cargar_resultados_backtest)."""
     df = res_oos_subset.reset_index()
     df["Fecha"] = pd.to_datetime(df["Fecha"]).dt.normalize()  # saca la hora, deja solo la fecha
-    pnl_diario = df.groupby(["Fecha", "Ventana"])["PNL"].sum().reset_index()
-    pnl_diario = pnl_diario.merge(resumen_fuente[["Ventana", "capital_inicio"]], on="Ventana", how="left")
-    pnl_diario["Retorno"] = pnl_diario["PNL"] / pnl_diario["capital_inicio"]
-    return pnl_diario.set_index("Fecha")[["Ventana", "Retorno"]]
+
+    diario = df.groupby(["Fecha", "Ventana"]).agg(PNL=("PNL", "sum"), Valorizacion_Total=("Valorizacion_Par", "sum")).reset_index()
+    diario = diario.merge(resumen_fuente[["Ventana", "capital_inicio"]], on="Ventana", how="left")
+    diario = diario.sort_values(["Ventana", "Fecha"])
+
+    diario["Valorizacion_t1"] = diario.groupby("Ventana")["Valorizacion_Total"].shift(1)
+    diario["Denominador"] = diario["Valorizacion_t1"].fillna(diario["capital_inicio"])
+    diario["Retorno"] = diario["PNL"] / diario["Denominador"]
+
+    return diario.set_index("Fecha")[["Ventana", "Retorno"]]
 
 
 # ============================================================
