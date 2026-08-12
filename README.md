@@ -71,11 +71,11 @@ flowchart TD
 |---|---|
 | Ventanas operativas | `[5]` |
 | Capital inicial | `[$ 1350]` |
-| Capital final | `[$2,233.57]` |
-| Retorno total | `[65.45%]` |
-| Max Drawdown | `[25%]` |
-| Beta de mercado (CAPM consolidado) | `[1.29]` |
-| IC 95% del bootstrap (PNL) | `[-315.5189, 2090.9659]` |
+| Capital final | `[$1,742.49]` |
+| Retorno total | `[29.07%]` |
+| Max Drawdown | `[-20.20%]` |
+| Beta de mercado (CAPM consolidado) | `[0.31]` |
+| IC 95% del bootstrap (PNL) | `[-700.04, 1,498.55]` |
 
 ## Gráficos
 
